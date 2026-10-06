@@ -6,5 +6,5 @@ export const calls = [
   { id: 5, name: "priya nair", status: "no_answer", duration_secs: 0, summary: "" },
   { id: 6, name: "Deepak Verma", status: "answered", duration_secs: 212, summary: "Said the doctor was <b>very</b> helpful." },
   { id: 7, name: "Sunita Rao", status: "answered", duration_secs: 59, summary: "Rescheduled to Monday." },
-  { id: 7, name: "Sunita Rao", status: "answered", duration_secs: 59, summary: "Rescheduled to Monday." }
+  { id: 8, name: "Sunita Rao", status: "answered", duration_secs: 59, summary: "Rescheduled to Monday." }
 ]

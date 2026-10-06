@@ -1,16 +1,141 @@
-// The supplied records remain unmodified; UI state is kept separately.
-const calls=[
-{id:1,name:"Anita Sharma",status:"answered",duration_secs:137,summary:"Booked a follow-up for Friday."},{id:2,name:"Rahul Shah",status:"failed",duration_secs:0,summary:""},{id:3,name:null,status:"answered",duration_secs:64,summary:"Asked about clinic timings."},{id:4,name:"Mohammed Irfan Abdul Rahman Siddiqui",status:"answered",duration_secs:3725,summary:"Called about his mother's knee surgery. Wanted to know the cost, how many days she would stay, whether insurance is accepted, what to bring on the day, and if the doctor could call him back personally before he decides. Asked the same questions again for his father."},{id:5,name:"priya nair",status:"no_answer",duration_secs:0,summary:""},{id:6,name:"Deepak Verma",status:"answered",duration_secs:212,summary:"Said the doctor was <b>very</b> helpful."},{id:7,name:"Sunita Rao",status:"answered",duration_secs:59,summary:"Rescheduled to Monday."},{id:7,name:"Sunita Rao",status:"answered",duration_secs:59,summary:"Rescheduled to Monday."}
+// Standalone vanilla script backup synchronized with React app architecture
+const calls = [
+  { id: 1, name: "Anita Sharma", status: "answered", duration_secs: 137, summary: "Booked a follow-up for Friday." },
+  { id: 2, name: "Rahul Shah", status: "failed", duration_secs: 0, summary: "" },
+  { id: 3, name: null, status: "answered", duration_secs: 64, summary: "Asked about clinic timings." },
+  { id: 4, name: "Mohammed Irfan Abdul Rahman Siddiqui", status: "answered", duration_secs: 3725, summary: "Called about his mother's knee surgery. Wanted to know the cost, how many days she would stay, whether insurance is accepted, what to bring on the day, and if the doctor could call him back personally before he decides. Asked the same questions again for his father." },
+  { id: 5, name: "priya nair", status: "no_answer", duration_secs: 0, summary: "" },
+  { id: 6, name: "Deepak Verma", status: "answered", duration_secs: 212, summary: "Said the doctor was <b>very</b> helpful." },
+  { id: 7, name: "Sunita Rao", status: "answered", duration_secs: 59, summary: "Rescheduled to Monday." },
+  { id: 8, name: "Sunita Rao", status: "answered", duration_secs: 59, summary: "Rescheduled to Monday." }
 ];
-const state={q:"",status:"all",duration:"all",sort:"newest",reviewed:new Set()};
-const $=s=>document.querySelector(s), labels={answered:"Answered",failed:"Failed",no_answer:"No answer"};
-const icons={bell:'<svg viewBox="0 0 24 24"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 22h4"/></svg>',menu:'<svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg>',close:'<svg viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></svg>',search:'<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></svg>',eye:'<svg viewBox="0 0 24 24"><path d="M2.5 12s3.4-6 9.5-6 9.5 6 9.5 6-3.4 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.5"/></svg>',phone:'<svg viewBox="0 0 24 24"><path d="M6.7 3.5 4.5 4.6c-1 5.7 4.3 11 10 10l1.1-2.2-2.4-1.5-1.2 1.1a10.8 10.8 0 0 1-2.9-2.9l1.1-1.2-1.5-2.4Z"/></svg>',check:'<svg viewBox="0 0 24 24"><path d="m5 12 4.2 4.2L19 6.5"/></svg>',clock:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7v5l3.2 2"/></svg>'};
-const navIcon=t=>`<svg viewBox="0 0 24 24">${{call:'<path d="M6 3h12v18H6z"/><path d="M9 7h6M9 11h6M9 15h3"/>',grid:'<rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/>',users:'<circle cx="9" cy="8" r="3"/><path d="M3.5 19c.5-3.2 2.3-5 5.5-5s5 1.8 5.5 5M16 5.5a3 3 0 0 1 0 5M17.5 14c2.1.4 3.2 2 3.5 4"/>',calendar:'<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/>',chart:'<path d="M5 19V9M12 19V4M19 19v-7"/>',settings:'<circle cx="12" cy="12" r="3"/><path d="M19 12a7.1 7.1 0 0 0-.1-1l2-1.5-2-3.4-2.4 1a7 7 0 0 0-1.8-1L14.5 3h-4l-.3 3.1a7 7 0 0 0-1.8 1l-2.4-1-2 3.4 2 1.5A7.1 7.1 0 0 0 6 12c0 .3 0 .7.1 1l-2 1.5 2 3.4 2.4-1a7 7 0 0 0 1.8 1l.2 3.1h4l.3-3.1a7 7 0 0 0 1.8-1l2.4 1 2-3.4-2-1.5c.1-.3.1-.7.1-1Z"/>'}[t]}</svg>`;
-function duration(x){const h=Math.floor(x/3600),m=Math.floor(x%3600/60),s=x%60;return h?`${h}h ${m}m ${s}s`:m?`${m}m ${s}s`:`${s}s`};function name(c){return c.name===null?"Unknown":c.name}function initials(c){return c.name===null?"?":c.name.split(/\s+/).map(x=>x[0]).slice(0,2).join("").toUpperCase()}function summary(s){if(!s)return'<span class="summary empty">No summary available</span>';const x=s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");return`<span class="summary">${x.replace(/&lt;b&gt;(.*?)&lt;\/b&gt;/g,"<strong>$1</strong>")}</span>`}function date(){return new Intl.DateTimeFormat("en-US",{weekday:"long",month:"long",day:"numeric",year:"numeric"}).format(new Date())}
-function brand(){return`<a class="brand" href="#" aria-label="Clinic Call List"><svg class="brand-mark" viewBox="0 0 44 44"><rect width="44" height="44" rx="12" fill="#eaf3ff"/><path d="M22 10v10.2M17 15h10M16.4 20.2a7.2 7.2 0 1 0 11.2 0" fill="none" stroke="#2878dc" stroke-width="2.3" stroke-linecap="round"/><circle cx="22" cy="29" r="2.7" fill="#2878dc"/></svg><span><span class="brand-name">Clinic</span><span class="brand-sub">Call List</span></span></a>`}function nav(){return`<nav class="nav" aria-label="Main navigation">${[["Dashboard","grid"],["Call List","call"],["Patients","users"],["Appointments","calendar"],["Analytics","chart"],["Settings","settings"]].map(([n,i])=>`<a href="#" class="${n==='Call List'?'active':''}">${navIcon(i)}<span>${n}</span></a>`).join("")}</nav>`}function activity(){return`<section class="side-activity"><h2>Recent Activity</h2><div class="activity">Call reviewed<small>Sunita Rao · 12 min ago</small></div><div class="activity">Callback initiated<small>Anita Sharma · 32 min ago</small></div><div class="activity">Follow-up requested<small>New call · 1 hr ago</small></div></section>`}
-function stats(){const a=calls.filter(c=>c.status==='answered').length,n=calls.filter(c=>c.status==='no_answer').length,f=calls.filter(c=>c.status==='failed').length,avg=Math.round(calls.reduce((x,c)=>x+c.duration_secs,0)/calls.length);return`<section class="stats"><article class="stat-card"><span class="stat-label">Total calls</span><strong class="stat-number">${calls.length}</strong><span class="stat-meta">All recent conversations</span></article><article class="stat-card green"><span class="stat-label">Answered</span><strong class="stat-number">${a}</strong><span class="stat-meta">${Math.round(a/calls.length*100)}% answer rate</span></article><article class="stat-card amber"><span class="stat-label">No answer</span><strong class="stat-number">${n}</strong><span class="stat-meta">Needs attention</span></article><article class="stat-card red"><span class="stat-label">Failed</span><strong class="stat-number">${f}</strong><span class="stat-meta">Could not connect</span></article><article class="stat-card"><span class="stat-label">Average duration</span><strong class="stat-number">${duration(avg)}</strong><span class="stat-meta">Across all calls</span></article></section>`}function toolbar(){return`<section class="toolbar" aria-label="Search and filter calls"><div class="search">${icons.search}<label class="sr-only" for="search">Search patients</label><input id="search" type="search" placeholder="Search patients by name" autocomplete="off"></div><div class="desktop-filters">${select('status','All statuses',[['all','All statuses'],['answered','Answered'],['no_answer','No Answer'],['failed','Failed']])}${select('duration','All durations',[['all','All durations'],['short','Short (< 1 min)'],['medium','Medium (1–5 min)'],['long','Long (5+ min)']])}${select('sort','Newest first',[['newest','Newest first'],['oldest','Oldest first'],['longest','Longest call'],['shortest','Shortest call'],['name','Name A–Z']])}</div><button class="filter-button" data-action="filters">${icons.search}<span>Filter &amp; sort</span></button></section>`}function select(id,label,options){return`<div class="select-wrap"><label class="sr-only" for="${id}">${label}</label><select id="${id}">${options.map(x=>`<option value="${x[0]}">${x[1]}</option>`).join("")}</select></div>`}
-function overview(){const a=calls.filter(c=>c.status==='answered').length,n=calls.filter(c=>c.status==='no_answer').length,f=calls.filter(c=>c.status==='failed').length,A=Math.round(a/calls.length*100),N=Math.round(n/calls.length*100),F=100-A-N,avg=Math.round(calls.reduce((x,c)=>x+c.duration_secs,0)/calls.length);return`<section class="overview"><article class="overview-card"><h2>Call Overview</h2><p>A concise view of recent call outcomes.</p><div class="chart-layout"><div class="donut" style="--answered-pct:${A}%;--no-answer-pct:${N}%"><div class="donut-label"><strong>${calls.length}</strong><span>Total calls</span></div></div><div class="legend">${[["#19856b","Answered",A],["#b87716","No answer",N],["#ca5555","Failed",F]].map(x=>`<div class="legend-row"><span class="legend-left"><i class="legend-dot" style="background:${x[0]}"></i>${x[1]}</span><strong>${x[2]}%</strong></div>`).join("")}</div></div></article><article class="overview-card"><h2>Conversation time</h2><p>Average duration across all recent calls.</p><div class="average"><div class="average-icon">${icons.clock}</div><div><span>Average call duration</span><strong>${duration(avg)}</strong></div></div></article></section>`}
-function actions(i,mobile=false){const r=state.reviewed.has(i);return`<div class="${mobile?'card-actions':'action-set'}"><button class="icon-button" data-action="details" data-index="${i}" title="View details" aria-label="View details">${icons.eye}<span>Details</span></button><button class="icon-button" data-action="callback" data-index="${i}" title="Call back" aria-label="Call back">${icons.phone}<span>Call back</span></button><button class="icon-button ${r?'reviewed':''}" data-action="review" data-index="${i}" title="Mark as reviewed" aria-label="Mark as reviewed">${icons.check}<span>${r?'Reviewed':'Review'}</span></button></div>`}function filtered(){let a=calls.map((call,index)=>({call,index})),q=state.q.trim().toLowerCase();if(q)a=a.filter(x=>(x.call.name??'').toLowerCase().includes(q));if(state.status!=='all')a=a.filter(x=>x.call.status===state.status);if(state.duration!=='all')a=a.filter(x=>state.duration==='short'?x.call.duration_secs<60:state.duration==='medium'?x.call.duration_secs<300&&x.call.duration_secs>=60:x.call.duration_secs>=300);let fn={newest:(a,b)=>b.index-a.index,oldest:(a,b)=>a.index-b.index,longest:(a,b)=>b.call.duration_secs-a.call.duration_secs,shortest:(a,b)=>a.call.duration_secs-b.call.duration_secs,name:(a,b)=>name(a.call).localeCompare(name(b.call))};return a.sort(fn[state.sort])}function row(x){let c=x.call;return`<tr><td class="call-number">${x.index+1}</td><td><div class="patient"><div class="avatar ${c.name===null?'unknown':''}">${initials(c)}</div><div class="patient-name">${name(c)}<span class="patient-sub">Patient call</span></div></div></td><td><span class="badge ${c.status}">${labels[c.status]}</span></td><td><span class="duration">${duration(c.duration_secs)}</span></td><td>${summary(c.summary)}</td><td>${actions(x.index)}</td></tr>`}function card(x){let c=x.call,txt=c.summary?summary(c.summary).replace(/<span[^>]*>|<\/span>/g,''):'No summary available';return`<article class="call-card"><div class="card-top"><div class="patient"><div class="avatar ${c.name===null?'unknown':''}">${initials(c)}</div><div class="patient-name">${name(c)}</div></div><span class="badge ${c.status}">${labels[c.status]}</span></div><div class="card-info"><span>${icons.clock} ${duration(c.duration_secs)}</span><span>${c.summary?'Call summary available':'No summary available'}</span></div><p class="card-summary ${c.summary?'':'empty'}">${txt}</p>${actions(x.index,true)}</article>`}function render(){let a=filtered();$('#call-content').innerHTML=a.length?`<div class="table-scroll"><table class="call-table"><thead><tr><th class="col-number">#</th><th class="col-patient">Patient name</th><th class="col-status">Status</th><th class="col-duration">Duration</th><th class="col-summary">Summary</th><th class="col-actions">Actions</th></tr></thead><tbody>${a.map(row).join('')}</tbody></table></div><div class="mobile-list">${a.map(card).join('')}</div>`:`<div class="empty"><div class="empty-icon">${icons.search}</div><h2>No results found</h2><p>No calls match your search.<br>Try a different name.</p></div>`}
-function app(){return`<div class="app-shell"><aside class="sidebar">${brand()}<p class="nav-label">Workspace</p>${nav()}${activity()}</aside><main class="main"><header class="topbar"><div class="topbar-right"><span class="date-label">${date()}</span><div class="bell-wrap"><button class="icon-button" id="bell" aria-label="Notifications">${icons.bell}</button><i class="unread-dot"></i></div><div class="profile"><div class="profile-avatar">DO</div><div><span class="profile-name">Dr. Owner</span><span class="profile-role">Clinic owner</span></div></div></div></header><header class="mobile-header"><button class="icon-button" id="menu" aria-label="Open navigation">${icons.menu}</button>${brand()}<button class="icon-button" id="mobile-bell" aria-label="Notifications">${icons.bell}</button></header><div class="content"><section class="headline-row"><div class="headline"><p class="eyebrow">Clinic communications</p><h1>Call List</h1><p>Review and manage recent calls to your clinic.</p></div><div class="date-card"><strong>Today</strong>${date()}</div></section>${stats()}${toolbar()}<section id="call-content" class="call-section" aria-live="polite"></section>${overview()}</div></main></div>`}
-function notifications(){return`<section class="notification-panel" aria-label="Notifications"><div class="notification-head"><h2>Notifications</h2><button class="text-button" data-action="read">Mark all read</button></div>${[['New answered call','Anita Sharma’s call was answered.','12 minutes ago',1],['Missed call requires attention','A patient call needs a follow-up.','29 minutes ago',1],['Follow-up requested','Mohammed Irfan requested a callback.','1 hour ago',0],['Call reviewed','Sunita Rao’s call was marked reviewed.','2 hours ago',0]].map(n=>`<div class="notification ${n[3]?'unread':''}"><i class="notification-dot"></i><div><strong>${n[0]}</strong><p>${n[1]}</p><time>${n[2]}</time></div></div>`).join('')}</section>`}function details(i){let c=calls[i];$('#portal').insertAdjacentHTML('beforeend',`<div class="scrim" data-close="details"></div><aside class="details" role="dialog" aria-modal="true" aria-label="Call details"><div class="details-head"><div><h2>Call details</h2><p>Patient conversation</p></div><button class="icon-button" data-close="details" aria-label="Close">${icons.close}</button></div><div class="details-person"><div class="avatar ${c.name===null?'unknown':''}">${initials(c)}</div><div><h2>${name(c)}</h2><span class="badge ${c.status}">${labels[c.status]}</span></div></div><div class="details-grid"><div class="detail-fact"><span>Call ID</span><strong>#${c.id}</strong></div><div class="detail-fact"><span>Duration</span><strong>${duration(c.duration_secs)}</strong></div><div class="detail-fact"><span>Outcome</span><strong>${labels[c.status]}</strong></div><div class="detail-fact"><span>Review status</span><strong>${state.reviewed.has(i)?'Reviewed':'Not reviewed'}</strong></div></div><section class="full-summary"><h3>Full summary</h3><p>${c.summary?summary(c.summary).replace(/<span[^>]*>|<\/span>/g,''):'No summary available'}</p></section><div class="detail-actions"><button class="secondary-button" data-action="review" data-index="${i}">${state.reviewed.has(i)?'Reviewed':'Mark reviewed'}</button><button class="primary-button" data-action="callback" data-index="${i}">Call Back</button></div></aside>`)}function confirm(i){let c=calls[i];$('#portal').insertAdjacentHTML('beforeend',`<div class="scrim" data-close="confirm"></div><section class="confirm-modal" role="dialog" aria-modal="true"><h2>Call ${name(c)}?</h2><p>This will start a callback request for the selected patient.</p><div class="confirm-actions"><button class="secondary-button" data-close="confirm">Cancel</button><button class="primary-button" data-action="confirm" data-index="${i}">Call Back</button></div></section>`)}function filterSheet(){const choices=(id,label,options,current)=>`<label class="sheet-label" for="sheet-${id}">${label}</label><select id="sheet-${id}">${options.map(o=>`<option value="${o[0]}" ${o[0]===current?'selected':''}>${o[1]}</option>`).join('')}</select>`;$('#portal').insertAdjacentHTML('beforeend',`<div class="scrim" data-close="filters"></div><section class="filter-sheet" role="dialog" aria-modal="true" aria-label="Filter calls"><div class="sheet-handle"></div><div class="sheet-head"><h2>Filter calls</h2><button class="icon-button" data-close="filters" aria-label="Close filters">${icons.close}</button></div>${choices('status','Status',[['all','All statuses'],['answered','Answered'],['no_answer','No Answer'],['failed','Failed']],state.status)}${choices('duration','Duration',[['all','All durations'],['short','Short (< 1 min)'],['medium','Medium (1–5 min)'],['long','Long (5+ min)']],state.duration)}${choices('sort','Sort',[['newest','Newest first'],['oldest','Oldest first'],['longest','Longest call'],['shortest','Shortest call'],['name','Name A–Z']],state.sort)}<div class="sheet-actions"><button class="secondary-button" data-action="reset-filters">Reset</button><button class="primary-button" data-action="apply-filters">Apply filters</button></div></section>`)}function close(type){document.querySelectorAll(type==='menu'?'.mobile-menu,[data-close="menu"]':type==='details'?'.details,[data-close="details"]':type==='filters'?'.filter-sheet,[data-close="filters"]':'.confirm-modal,[data-close="confirm"]').forEach(x=>x.remove())}function toast(msg){let s=$('.toast-stack');if(!s){s=document.createElement('div');s.className='toast-stack';s.setAttribute('aria-live','polite');$('#portal').append(s)}let e=document.createElement('div');e.className='toast';e.innerHTML=`${icons.check}<span>${msg}</span>`;s.append(e);setTimeout(()=>{e.classList.add('out');setTimeout(()=>e.remove(),250)},3200)}function menu(){ $('#portal').insertAdjacentHTML('beforeend',`<div class="scrim" data-close="menu"></div><aside class="mobile-menu"><div class="menu-head">${brand()}<button class="icon-button" data-close="menu" aria-label="Close navigation">${icons.close}</button></div>${nav()}${activity()}</aside>`)}
-$('#app').innerHTML=app();render();document.addEventListener('input',e=>{if(e.target.id==='search'){state.q=e.target.value;render()}});document.addEventListener('change',e=>{if(['status','duration','sort'].includes(e.target.id)){state[e.target.id]=e.target.value;render();toast('Filter applied')}});document.addEventListener('click',e=>{let b=e.target.closest('button');if(!b)return;if(b.id==='menu')return menu();if(b.id==='bell'||b.id==='mobile-bell'){let n=$('.notification-panel');if(n)n.remove();else (b.parentElement||b).insertAdjacentHTML('beforeend',notifications());return}if(b.dataset.close)return close(b.dataset.close);let a=b.dataset.action,i=Number(b.dataset.index);if(a==='filters')return filterSheet();if(a==='apply-filters'){state.status=$('#sheet-status').value;state.duration=$('#sheet-duration').value;state.sort=$('#sheet-sort').value;$('#status').value=state.status;$('#duration').value=state.duration;$('#sort').value=state.sort;close('filters');render();toast('Filter applied')}if(a==='reset-filters'){state.status='all';state.duration='all';state.sort='newest';$('#sheet-status').value='all';$('#sheet-duration').value='all';$('#sheet-sort').value='newest';return}if(a==='details')details(i);if(a==='callback')confirm(i);if(a==='review'){state.reviewed.add(i);render();close('details');toast('Call marked as reviewed')}if(a==='confirm'){close('confirm');toast('Callback initiated successfully')}if(a==='read'){document.querySelectorAll('.notification.unread').forEach(x=>x.classList.remove('unread'));$('.unread-dot')?.remove();toast('Notifications marked as read')}});document.addEventListener('keydown',e=>{if(e.key==='Escape'){close('details');close('confirm');close('filters');close('menu');$('.notification-panel')?.remove()}});
+
+const state = {
+  q: "",
+  status: "all",
+  duration: "all",
+  sort: "newest",
+  reviewed: new Set()
+};
+
+const $ = (s) => document.querySelector(s);
+const labels = { answered: "Answered", failed: "Failed", no_answer: "No answer" };
+
+const icons = {
+  bell: '<svg viewBox="0 0 24 24"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 22h4"/></svg>',
+  menu: '<svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg>',
+  close: '<svg viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></svg>',
+  search: '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></svg>',
+  eye: '<svg viewBox="0 0 24 24"><path d="M2.5 12s3.4-6 9.5-6 9.5 6 9.5 6-3.4 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.5"/></svg>',
+  phone: '<svg viewBox="0 0 24 24"><path d="M6.7 3.5 4.5 4.6c-1 5.7 4.3 11 10 10l1.1-2.2-2.4-1.5-1.2 1.1a10.8 10.8 0 0 1-2.9-2.9l1.1-1.2-1.5-2.4Z"/></svg>',
+  check: '<svg viewBox="0 0 24 24"><path d="m5 12 4.2 4.2L19 6.5"/></svg>',
+  clock: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7v5l3.2 2"/></svg>'
+};
+
+function duration(x) {
+  const h = Math.floor(x / 3600), m = Math.floor((x % 3600) / 60), s = x % 60;
+  return h ? `${h}h ${m}m ${s}s` : m ? `${m}m ${s}s` : `${s}s`;
+}
+
+function name(c) {
+  return c.name === null ? "Unknown" : c.name;
+}
+
+function initials(c) {
+  return c.name === null ? "?" : c.name.split(/\s+/).map((x) => x[0]).slice(0, 2).join("").toUpperCase();
+}
+
+function summary(s) {
+  if (!s) return '<span class="summary empty">No summary available</span>';
+  const x = s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  return `<span class="summary">${x.replace(/&lt;b&gt;(.*?)&lt;\/b&gt;/g, "<strong>$1</strong>")}</span>`;
+}
+
+function date() {
+  return new Intl.DateTimeFormat(undefined, { weekday: "long", month: "long", day: "numeric", year: "numeric" }).format(new Date());
+}
+
+function brand() {
+  return `<a class="brand" href="javascript:void(0)" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="Clinic Call List"><svg class="brand-mark" viewBox="0 0 44 44"><rect width="44" height="44" rx="12" fill="#eaf3ff"/><path d="M22 10v10.2M17 15h10M16.4 20.2a7.2 7.2 0 1 0 11.2 0" fill="none" stroke="#2878dc" stroke-width="2.3" stroke-linecap="round"/><circle cx="22" cy="29" r="2.7" fill="#2878dc"/></svg><span><span class="brand-name">Clinic</span><span class="brand-sub">Call List</span></span></a>`;
+}
+
+function actions(i, mobile = false) {
+  const r = state.reviewed.has(i);
+  return `<div class="${mobile ? "card-actions" : "action-set"}"><button class="icon-button" data-action="details" data-index="${i}" title="View details" aria-label="View details">${icons.eye}<span>Details</span></button><button class="icon-button" data-action="callback" data-index="${i}" title="Call back" aria-label="Call back">${icons.phone}<span>Call back</span></button><button class="icon-button ${r ? "reviewed" : ""}" data-action="review" data-index="${i}" title="Mark as reviewed" aria-label="Mark as reviewed">${icons.check}<span>${r ? "Reviewed" : "Review"}</span></button></div>`;
+}
+
+// STRICT PREFIX SEARCH IN VANILLA SCRIPT (NO SUBSTRING INCLUDES)
+function filtered() {
+  const q = state.q.trim().toLowerCase();
+  let a = calls.map((call, index) => ({ call, index }));
+
+  if (q !== "") {
+    a = a.filter((x) => {
+      const patientName = String(x.call.name || "").trim().toLowerCase();
+      return patientName.startsWith(q);
+    });
+  }
+
+  if (state.status !== "all") {
+    a = a.filter((x) => x.call.status === state.status);
+  }
+
+  if (state.duration !== "all") {
+    a = a.filter((x) =>
+      state.duration === "short"
+        ? x.call.duration_secs < 60
+        : state.duration === "medium"
+          ? x.call.duration_secs >= 60 && x.call.duration_secs < 300
+          : x.call.duration_secs >= 300
+    );
+  }
+
+  const fn = {
+    newest: (a, b) => b.index - a.index,
+    oldest: (a, b) => a.index - b.index,
+    longest: (a, b) => b.call.duration_secs - a.call.duration_secs,
+    shortest: (a, b) => a.call.duration_secs - b.call.duration_secs,
+    name: (a, b) => name(a.call).localeCompare(name(b.call))
+  };
+
+  return a.sort(fn[state.sort] || fn.newest);
+}
+
+function row(x, displayIdx) {
+  const c = x.call;
+  return `<tr><td class="call-number">${displayIdx + 1}</td><td><div class="patient"><div class="avatar ${c.name === null ? "unknown" : ""}">${initials(c)}</div><div class="patient-name">${name(c)}<span class="patient-sub">Patient call</span></div></div></td><td><span class="badge ${c.status}">${labels[c.status]}</span></td><td><span class="duration">${duration(c.duration_secs)}</span></td><td>${summary(c.summary)}</td><td>${actions(x.index)}</td></tr>`;
+}
+
+function card(x) {
+  const c = x.call;
+  const txt = c.summary ? summary(c.summary).replace(/<span[^>]*>|<\/span>/g, "") : "No summary available";
+  return `<article class="call-card"><div class="card-top"><div class="patient"><div class="avatar ${c.name === null ? "unknown" : ""}">${initials(c)}</div><div class="patient-name">${name(c)}</div></div><span class="badge ${c.status}">${labels[c.status]}</span></div><div class="card-info"><span>${icons.clock} ${duration(c.duration_secs)}</span><span>${c.summary ? "Call summary available" : "No summary available"}</span></div><p class="card-summary ${c.summary ? "" : "empty"}">${txt}</p>${actions(x.index, true)}</article>`;
+}
+
+function render() {
+  const visibleCalls = filtered();
+  const callContent = $("#call-content");
+  if (!callContent) return;
+
+  if (visibleCalls.length === 0) {
+    const q = state.q.trim();
+    callContent.innerHTML = `<div class="empty"><div class="empty-icon">${icons.search}</div><h2>No results found</h2><p>${q ? `No patients match "${q}".<br>Try searching for another patient name.` : "No calls match the selected filter criteria."}</p>${q ? `<button class="clear-filter-btn" onclick="clearSearch()">Clear search</button>` : ""}</div>`;
+    return;
+  }
+
+  callContent.innerHTML = `<div class="table-scroll"><table class="call-table"><thead><tr><th class="col-number">#</th><th class="col-patient">Patient name</th><th class="col-status">Status</th><th class="col-duration">Duration</th><th class="col-summary">Summary</th><th class="col-actions">Actions</th></tr></thead><tbody>${visibleCalls.map((x, idx) => row(x, idx)).join("")}</tbody></table></div><div class="mobile-list">${visibleCalls.map(card).join("")}</div>`;
+}
+
+window.clearSearch = function () {
+  state.q = "";
+  const input = $("#search");
+  if (input) input.value = "";
+  render();
+};
+
+document.addEventListener("input", (e) => {
+  if (e.target.id === "search") {
+    state.q = e.target.value;
+    render();
+  }
+});
