@@ -312,6 +312,9 @@ button:focus-visible, input:focus-visible, select:focus-visible {
   display: flex;
   align-items: center;
   gap: 16px;
+}
+
+.notification-trigger {
   position: relative;
 }
 
@@ -1406,12 +1409,22 @@ tr:hover td {
     background: #ffffff;
     border-bottom: 1px solid var(--line);
   }
+  .mobile-notification-trigger {
+    position: static;
+  }
   .notifications {
-    top: 60px;
-    right: 12px;
+    position: fixed;
+    top: 76px;
+    right: auto;
     left: 12px;
-    width: auto;
-    max-width: none;
+    width: calc(100vw - 24px);
+    max-width: 380px;
+    max-height: calc(100dvh - 88px);
+    transform: none;
+    z-index: 200;
+  }
+  .notif-body {
+    max-height: min(330px, calc(100dvh - 205px));
   }
   .page {
     padding: 20px 16px 40px;

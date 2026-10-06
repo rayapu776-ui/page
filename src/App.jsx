@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { NavLink, Route, Routes, useLocation } from 'react-router-dom'
 import { calls as initialCalls } from './data'
 
@@ -259,6 +259,7 @@ function Header({
   unread,
   bellOpen,
   notifRef,
+  mobileNotifRef,
   notes,
   onMarkAllRead,
   onMarkOneRead,
@@ -279,26 +280,27 @@ function Header({
         <div className="date-display">
           <span>Today • {today}</span>
         </div>
-        <div className="header-actions" ref={notifRef}>
-          <button
-            className={`bell icon-btn ${bellOpen ? 'active' : ''}`}
-            onClick={onBell}
-            aria-label="Notifications"
-            title="Notifications"
-          >
-            <I name="bell" />
-            {unread > 0 && <span className="unread-dot">{unread > 9 ? '9+' : unread}</span>}
-          </button>
+        <div className="header-actions">
+          <div className="notification-trigger" ref={notifRef}>
+            <button
+              className={`bell icon-btn ${bellOpen ? 'active' : ''}`}
+              onClick={onBell}
+              aria-label="Notifications"
+              title="Notifications"
+            >
+              <I name="bell" />
+              {unread > 0 && <span className="unread-dot">{unread > 9 ? '9+' : unread}</span>}
+            </button>
 
-          {/* Desktop Notification Popover anchored directly below the bell */}
-          {bellOpen && (
-            <NotificationsPanel
-              items={notes}
-              onMarkAllRead={onMarkAllRead}
-              onMarkOneRead={onMarkOneRead}
-              onClose={onCloseNotif}
-            />
-          )}
+            {bellOpen && (
+              <NotificationsPanel
+                items={notes}
+                onMarkAllRead={onMarkAllRead}
+                onMarkOneRead={onMarkOneRead}
+                onClose={onCloseNotif}
+              />
+            )}
+          </div>
 
           <div className="profile">
             <span>
@@ -314,7 +316,7 @@ function Header({
           <I name="menu" />
         </button>
         <ClinicBrand />
-        <div style={{ position: 'relative' }}>
+        <div className="mobile-notification-trigger" ref={mobileNotifRef}>
           <button
             className={`bell icon-btn ${bellOpen ? 'active' : ''}`}
             onClick={onBell}
@@ -935,6 +937,8 @@ export default function App() {
   const [details, setDetails] = useState(null)
   const [callback, setCallback] = useState(null)
   const [toast, setToast] = useState(null)
+  const desktopNotificationRef = useRef(null)
+  const mobileNotificationRef = useRef(null)
 
   // Real React Notifications & Activity state with dynamic timestamps
   const [activities, setActivities] = useState([
@@ -957,6 +961,24 @@ export default function App() {
     setBell(false)
     setMenu(false)
   }, [location.pathname])
+
+  // Close the notification panel only when the active layout's bell and panel are both outside the tap.
+  useEffect(() => {
+    if (!bell) return
+
+    const closeNotificationPanel = (event) => {
+      const notificationRef = window.matchMedia('(min-width: 861px)').matches
+        ? desktopNotificationRef
+        : mobileNotificationRef
+
+      if (notificationRef.current && !notificationRef.current.contains(event.target)) {
+        setBell(false)
+      }
+    }
+
+    document.addEventListener('pointerdown', closeNotificationPanel)
+    return () => document.removeEventListener('pointerdown', closeNotificationPanel)
+  }, [bell])
 
   // Toast Auto-dismiss
   useEffect(() => {
@@ -1036,20 +1058,16 @@ export default function App() {
       <div className="main">
         <Header
           onMenu={() => setMenu(true)}
-          onBell={() => setBell(!bell)}
+          onBell={() => setBell((isOpen) => !isOpen)}
           unread={unreadCount}
           bellOpen={bell}
+          notifRef={desktopNotificationRef}
+          mobileNotifRef={mobileNotificationRef}
+          notes={notes}
+          onMarkAllRead={handleMarkAllRead}
+          onMarkOneRead={handleMarkOneRead}
+          onCloseNotif={() => setBell(false)}
         />
-
-        {/* Redesigned Notification Panel */}
-        {bell && (
-          <NotificationsPanel
-            items={notes}
-            onMarkAllRead={handleMarkAllRead}
-            onMarkOneRead={handleMarkOneRead}
-            onClose={() => setBell(false)}
-          />
-        )}
 
         {/* Application Page Routes */}
         <Routes>
